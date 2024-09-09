@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+
+using std::vector, std::cout;
 
 int main(){
     std::ofstream myfile;

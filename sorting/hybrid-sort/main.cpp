@@ -17,6 +17,12 @@ void timeHybridSort();
 void timeMergeSort();
 void timeInsertionSort();
 void timeInsertionMergeSorts();
+vector<int> insertionSortForHybrid(vector<int> unsorted);
+
+int hybridKeyComp = 0;
+int mergeKeyComp = 0;
+int insertKeyComp = 0;
+
 
 int main(int argc, char* argv[]){
     std::thread thread1(timeMergeSort);
@@ -35,7 +41,7 @@ void timeHybridSort(){
     vector<int> res;
     std::ofstream file;
     file.open("timingsHybrid.csv", std::ios::app); // set to append mode
-    file << "sampleSize,hybridSort\n";
+    file << "sampleSize,hybridSort,keycomp\n";
     cout << "starting HybridSort timing\n";
     for (int i=0; i<5000; i++){
         // create the sample data
@@ -48,8 +54,11 @@ void timeHybridSort(){
         res = hybridSort(test, 305);
         auto stopHybridSort = high_resolution_clock::now();
         auto durationHybridSort = duration_cast<nanoseconds>(stopHybridSort-startHybridSort);
-        file << test.size() << "," << (int)durationHybridSort.count() << "\n";
+        file << test.size() << "," << (int)durationHybridSort.count() << "," << hybridKeyComp << "\n";
+        hybridKeyComp = 0;
     }
+    cout << "HybridSort Done!\n";
+
 }
 
 // void timeInsertionMergeSorts(){
@@ -83,7 +92,7 @@ void timeMergeSort(){
     vector<int> res;
     std::ofstream file;
     file.open("timingsMerge.csv", std::ios::app); // set to append mode
-    file << "sampleSize,mergeSort\n";
+    file << "sampleSize,mergeSort,keycomp\n";
     cout << "starting Merge Sort timing...\n";
     for (int i=0; i<5000; i++){
         // create the sample data
@@ -96,7 +105,8 @@ void timeMergeSort(){
         res = mergesort(test);
         auto stopMergeSort = high_resolution_clock::now();
         auto durationMergeSort = duration_cast<nanoseconds>(stopMergeSort-startMergeSort);
-        file << test.size() << "," << (int)durationMergeSort.count() << "\n";
+        file << test.size() << "," << (int)durationMergeSort.count() << "," << mergeKeyComp << "\n";
+        mergeKeyComp = 0;
     }
     cout << "Merge Sort Done!\n";
 }
@@ -105,7 +115,7 @@ void timeInsertionSort(){
     vector<int> res;
     std::ofstream file;
     file.open("timingsInsertion.csv", std::ios::app); // set to append mode
-    file << "sampleSize,insertionSort\n";
+    file << "sampleSize,insertionSort,keycomp\n";
 
     cout << "starting Insertion Sort timing...\n";
     for (int i=0; i<5000; i++){
@@ -119,7 +129,8 @@ void timeInsertionSort(){
         res = insertionSort(test);
         auto stopInsertionSort = high_resolution_clock::now();
         auto durationInsertionSort = duration_cast<nanoseconds>(stopInsertionSort-startInsertionSort);
-        file << test.size() << "," << (int)durationInsertionSort.count() << "\n";
+        file << test.size() << "," << (int)durationInsertionSort.count() << "," << insertKeyComp << "\n";
+        insertKeyComp = 0;
     }
     cout << "Insertion Sort Done!\n";
 
@@ -236,6 +247,7 @@ void printVector(vector<int> v){
 
 vector<int> mergesort(vector<int> unsorted){
     // base case: vector has 1/0 elements, it is already sorted
+    mergeKeyComp++;
     if (unsorted.size() <= 1){
         return unsorted;
     }
@@ -266,6 +278,7 @@ vector<int> mergesort(vector<int> unsorted){
         else {
             result.push_back(sortedSecondHalf[y++]);
         }
+        mergeKeyComp++;
     }
     // finish up any remaining elements
     while (x < firstHalfSize){
@@ -288,6 +301,21 @@ vector<int> insertionSort(vector<int> unsorted){
     int temp;
     for (int i=1; i<unsorted.size(); i++){
         for (int j=i; j>0; j--){
+            insertKeyComp++;
+            if (unsorted[j] < unsorted[j-1]){
+                swap(&unsorted[j], &unsorted[j-1]);
+            }
+            else break;
+        }
+    }
+    return unsorted;
+}
+
+vector<int> insertionSortForHybrid(vector<int> unsorted){
+    int temp;
+    for (int i=1; i<unsorted.size(); i++){
+        for (int j=i; j>0; j--){
+            hybridKeyComp++;
             if (unsorted[j] < unsorted[j-1]){
                 swap(&unsorted[j], &unsorted[j-1]);
             }
@@ -314,13 +342,15 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
     vector<int> sortedSecondHalf;
 
     if (halfLen <= threshold){
-        sortedFirstHalf = insertionSort(firstHalf);
-        sortedSecondHalf = insertionSort(secondHalf);
+        // add key comparisons
+        sortedFirstHalf = insertionSortForHybrid(firstHalf);
+        sortedSecondHalf = insertionSortForHybrid(secondHalf);
     }
     else{
         sortedFirstHalf = hybridSort(firstHalf, threshold);
         sortedSecondHalf = hybridSort(secondHalf, threshold);
     }
+    hybridKeyComp++;
 
     // create the resulting vector to place elements
     vector<int> result = {};
@@ -332,12 +362,12 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
     int secondHalfSize = sortedSecondHalf.size();
     while (x < firstHalfSize && y < secondHalfSize){
         if (sortedFirstHalf[x] <= sortedSecondHalf[y]){
-
             result.push_back(sortedFirstHalf[x++]);
         }
         else {
             result.push_back(sortedSecondHalf[y++]);
         }
+        hybridKeyComp++;
     }
     // finish up any remaining elements
     while (x < firstHalfSize){
