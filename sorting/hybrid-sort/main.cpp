@@ -329,6 +329,13 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
     if (unsorted.size() <= 1){
         return unsorted;
     }
+    hybridKeyComp++;
+
+
+    if (unsorted.size() <= threshold){
+        return insertionSortForHybrid(unsorted);
+    }
+    hybridKeyComp++;
 
     // split vector into 2
     int halfLen = unsorted.size()/2;
@@ -341,15 +348,8 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
     vector<int> sortedFirstHalf;
     vector<int> sortedSecondHalf;
 
-    if (halfLen <= threshold){
-        // add key comparisons
-        sortedFirstHalf = insertionSortForHybrid(firstHalf);
-        sortedSecondHalf = insertionSortForHybrid(secondHalf);
-    }
-    else{
-        sortedFirstHalf = hybridSort(firstHalf, threshold);
-        sortedSecondHalf = hybridSort(secondHalf, threshold);
-    }
+    sortedFirstHalf = hybridSort(firstHalf, threshold);
+    sortedSecondHalf = hybridSort(secondHalf, threshold);
     hybridKeyComp++;
 
     // create the resulting vector to place elements
