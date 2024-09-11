@@ -20,27 +20,29 @@ void timeMergeSort();
 void timeInsertionSort();
 void timeInsertionMergeSorts();
 
-int hybridKeyComp = 0;
-int mergeKeyComp = 0;
-int insertKeyComp = 0;
+uint64_t hybridKeyComp = 0;
+uint64_t mergeKeyComp = 0;
+uint64_t insertKeyComp = 0;
 
 int minSize = 1000;
 int maxSize = 10000000;
-int step = 2000;
+int step = 5000;
 
 int thresholdTiming = 110;
 int thresholdKeyComp = 9;
+int trivialThreshold = 200;
 
 std::mutex file_mutex;
 
 int main(int argc, char* argv[]){
-    std::thread thread1(timeMergeSort);
-    std::thread thread2(timeInsertionSort);
-    std::thread thread3(timeHybridSort);
+    // std::thread thread1(timeMergeSort);
+    // std::thread thread2(timeInsertionSort);
+    // std::thread thread3(timeHybridSort);
 
-    thread1.join();
-    thread2.join();
-    thread3.join();
+    // thread1.join();
+    // thread2.join();
+    // thread3.join();
+    timeHybridSort();
     
     cout << "All sorting operations completed.\n";
     return 0;
@@ -140,7 +142,7 @@ void timeHybridSort() {
     }
 
     cout << "starting HybridSort timing\n";
-    for (int i = minSize; i < maxSize; i += step) {
+    for (int i = minSize-step; i < maxSize; i += step) {
         cout << "HybridSort timing for " << i << "\n";
         vector<int> test;
         for (int j = i; j > 0; j--) {
@@ -149,7 +151,7 @@ void timeHybridSort() {
         }
 
         auto startHybridSort = high_resolution_clock::now();
-        res = hybridSort(test, thresholdKeyComp);
+        res = hybridSort(test, trivialThreshold);
         auto stopHybridSort = high_resolution_clock::now();
         auto durationHybridSort = duration_cast<nanoseconds>(stopHybridSort - startHybridSort);
 
@@ -448,16 +450,17 @@ vector<int> insertionSortForHybrid(vector<int> unsorted){
 }
 
 vector<int> hybridSort(vector<int> unsorted, int threshold){
+    
+    hybridKeyComp++;
     if (unsorted.size() <= 1){
         return unsorted;
     }
+
+
     hybridKeyComp++;
-
-
     if (unsorted.size() <= threshold){
         return insertionSortForHybrid(unsorted);
     }
-    hybridKeyComp++;
 
     // split vector into 2
     int halfLen = unsorted.size()/2;
@@ -472,7 +475,6 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
 
     sortedFirstHalf = hybridSort(firstHalf, threshold);
     sortedSecondHalf = hybridSort(secondHalf, threshold);
-    hybridKeyComp++;
 
     // create the resulting vector to place elements
     vector<int> result = {};
@@ -483,13 +485,13 @@ vector<int> hybridSort(vector<int> unsorted, int threshold){
     int firstHalfSize = sortedFirstHalf.size();
     int secondHalfSize = sortedSecondHalf.size();
     while (x < firstHalfSize && y < secondHalfSize){
+        hybridKeyComp++;
         if (sortedFirstHalf[x] <= sortedSecondHalf[y]){
             result.push_back(sortedFirstHalf[x++]);
         }
         else {
             result.push_back(sortedSecondHalf[y++]);
         }
-        hybridKeyComp++;
     }
     // finish up any remaining elements
     while (x < firstHalfSize){
