@@ -4,6 +4,7 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
+#include <random>
 
 using std::cout, std::vector;
 using std::chrono::high_resolution_clock, std::chrono::duration_cast, std::chrono::nanoseconds;
@@ -15,22 +16,25 @@ vector<int> insertionSortForHybrid(vector<int> unsorted);
 void printVector(vector<int>);
 void testSorting();
 void swap(int*a, int*b);
-void timeHybridSort();
-void timeMergeSort();
+// void timeHybridSort();
+// void timeMergeSort();
 void timeInsertionSort();
 void timeInsertionMergeSorts();
+vector<int> generateData(int size);
+void timeHybridSort(const vector<int>& baseData);
+void timeMergeSort(const vector<int>& baseData);
 
 uint64_t hybridKeyComp = 0;
 uint64_t mergeKeyComp = 0;
 uint64_t insertKeyComp = 0;
 
-int minSize = 1000;
+int minSize = 10000000;
 int maxSize = 10000000;
-int step = 5000;
+int step = 10;
 
 int thresholdTiming = 110;
 int thresholdKeyComp = 9;
-int trivialThreshold = 200;
+int trivialThreshold = 9;
 
 std::mutex file_mutex;
 
@@ -42,7 +46,16 @@ int main(int argc, char* argv[]){
     // thread1.join();
     // thread2.join();
     // thread3.join();
-    timeHybridSort();
+    //timeHybridSort();
+    //timeMergeSort();
+
+    int dataSize = maxSize; // or any specific size if needed
+    vector<int> baseData = generateData(dataSize);
+
+    timeHybridSort(baseData);
+    timeMergeSort(baseData);
+
+    return 0;
     
     cout << "All sorting operations completed.\n";
     return 0;
@@ -125,30 +138,29 @@ int main(int argc, char* argv[]){
 //     }
 //     cout << "Insertion Sort Done!\n";
 
-// }
-void timeHybridSort() {
-    vector<int> res;
-    std::ofstream file;
 
-    {
-        // Use mutex to ensure only one thread writes to the file at a time
-        std::lock_guard<std::mutex> lock(file_mutex);
-        file.open("timingsHybrid.csv", std::ios::app);
-        if (!file.is_open()) {
-            cout << "Error opening timingsHybrid.csv for writing.\n";
-            return;
-        }
-        file << "sampleSize,timing,keycomp\n";
+
+// ignore the above
+
+
+vector<int> generateData(int size) {
+    vector<int> data(size);
+    std::mt19937 gen(42); // Use a fixed seed for reproducibility
+    std::uniform_int_distribution<> dis(0, size - 1);
+    
+    for (int i = 0; i < size; i++) {
+        data[i] = dis(gen);
     }
+    return data;
+}
+
+void timeHybridSort(const vector<int>& baseData) {
+    vector<int> res;
 
     cout << "starting HybridSort timing\n";
-    for (int i = minSize-step; i < maxSize; i += step) {
+    for (int i = minSize; i <= maxSize; i += step) {
         cout << "HybridSort timing for " << i << "\n";
-        vector<int> test;
-        for (int j = i; j > 0; j--) {
-            int randomNum = rand() % i;
-            test.push_back(randomNum);
-        }
+        vector<int> test(baseData.begin(), baseData.begin() + i);
 
         auto startHybridSort = high_resolution_clock::now();
         res = hybridSort(test, trivialThreshold);
@@ -156,15 +168,13 @@ void timeHybridSort() {
         auto durationHybridSort = duration_cast<nanoseconds>(stopHybridSort - startHybridSort);
 
         {
-            // Write to file within mutex-protected block
             std::lock_guard<std::mutex> lock(file_mutex);
-            file.open("timingsHybrid.csv", std::ios::app);
+            std::ofstream file("timingsHybrid.csv", std::ios::app);
             if (!file.is_open()) {
                 cout << "Error opening timingsHybrid.csv for writing.\n";
                 return;
             }
             file << test.size() << "," << durationHybridSort.count() << "," << hybridKeyComp << "\n";
-            file.close();
         }
 
         hybridKeyComp = 0;
@@ -172,28 +182,13 @@ void timeHybridSort() {
     cout << "HybridSort Done!\n";
 }
 
-void timeMergeSort() {
+void timeMergeSort(const vector<int>& baseData) {
     vector<int> res;
-    std::ofstream file;
-
-    {
-        std::lock_guard<std::mutex> lock(file_mutex);
-        file.open("timingsMerge.csv", std::ios::app);
-        if (!file.is_open()) {
-            cout << "Error opening timingsMerge.csv for writing.\n";
-            return;
-        }
-        file << "sampleSize,timing,keycomp\n";
-    }
 
     cout << "starting MergeSort timing\n";
-    for (int i = minSize; i < maxSize; i += step) {
+    for (int i = minSize; i <= maxSize; i += step) {
         cout << "MergeSort timing for " << i << "\n";
-        vector<int> test;
-        for (int j = i; j > 0; j--) {
-            int randomNum = rand() % i;
-            test.push_back(randomNum);
-        }
+        vector<int> test(baseData.begin(), baseData.begin() + i);
 
         auto startMergeSort = high_resolution_clock::now();
         res = mergesort(test);
@@ -202,19 +197,109 @@ void timeMergeSort() {
 
         {
             std::lock_guard<std::mutex> lock(file_mutex);
-            file.open("timingsMerge.csv", std::ios::app);
+            std::ofstream file("timingsMerge.csv", std::ios::app);
             if (!file.is_open()) {
                 cout << "Error opening timingsMerge.csv for writing.\n";
                 return;
             }
             file << test.size() << "," << durationMergeSort.count() << "," << mergeKeyComp << "\n";
-            file.close();
         }
 
         mergeKeyComp = 0;
     }
     cout << "MergeSort Done!\n";
 }
+
+// }
+// void timeHybridSort() {
+//     vector<int> res;
+//     std::ofstream file;
+
+//     {
+//         // Use mutex to ensure only one thread writes to the file at a time
+//         std::lock_guard<std::mutex> lock(file_mutex);
+//         file.open("timingsHybrid.csv", std::ios::app);
+//         if (!file.is_open()) {
+//             cout << "Error opening timingsHybrid.csv for writing.\n";
+//             return;
+//         }
+//         file << "sampleSize,timing,keycomp\n";
+//     }
+
+//     cout << "starting HybridSort timing\n";
+//     for (int i = minSize-step; i < maxSize; i += step) {
+//         cout << "HybridSort timing for " << i << "\n";
+//         vector<int> test;
+//         for (int j = i; j > 0; j--) {
+//             int randomNum = rand() % i;
+//             test.push_back(randomNum);
+//         }
+
+//         auto startHybridSort = high_resolution_clock::now();
+//         res = hybridSort(test, trivialThreshold);
+//         auto stopHybridSort = high_resolution_clock::now();
+//         auto durationHybridSort = duration_cast<nanoseconds>(stopHybridSort - startHybridSort);
+
+//         {
+//             // Write to file within mutex-protected block
+//             std::lock_guard<std::mutex> lock(file_mutex);
+//             file.open("timingsHybrid.csv", std::ios::app);
+//             if (!file.is_open()) {
+//                 cout << "Error opening timingsHybrid.csv for writing.\n";
+//                 return;
+//             }
+//             file << test.size() << "," << durationHybridSort.count() << "," << hybridKeyComp << "\n";
+//             file.close();
+//         }
+
+//         hybridKeyComp = 0;
+//     }
+//     cout << "HybridSort Done!\n";
+// }
+
+// void timeMergeSort() {
+//     vector<int> res;
+//     std::ofstream file;
+
+//     {
+//         std::lock_guard<std::mutex> lock(file_mutex);
+//         file.open("timingsMerge.csv", std::ios::app);
+//         if (!file.is_open()) {
+//             cout << "Error opening timingsMerge.csv for writing.\n";
+//             return;
+//         }
+//         file << "sampleSize,timing,keycomp\n";
+//     }
+
+//     cout << "starting MergeSort timing\n";
+//     for (int i = minSize; i < maxSize; i += step) {
+//         cout << "MergeSort timing for " << i << "\n";
+//         vector<int> test;
+//         for (int j = i; j > 0; j--) {
+//             int randomNum = rand() % i;
+//             test.push_back(randomNum);
+//         }
+
+//         auto startMergeSort = high_resolution_clock::now();
+//         res = mergesort(test);
+//         auto stopMergeSort = high_resolution_clock::now();
+//         auto durationMergeSort = duration_cast<nanoseconds>(stopMergeSort - startMergeSort);
+
+//         {
+//             std::lock_guard<std::mutex> lock(file_mutex);
+//             file.open("timingsMerge.csv", std::ios::app);
+//             if (!file.is_open()) {
+//                 cout << "Error opening timingsMerge.csv for writing.\n";
+//                 return;
+//             }
+//             file << test.size() << "," << durationMergeSort.count() << "," << mergeKeyComp << "\n";
+//             file.close();
+//         }
+
+//         mergeKeyComp = 0;
+//     }
+//     cout << "MergeSort Done!\n";
+// }
 
 void timeInsertionSort() {
     vector<int> res;
