@@ -73,83 +73,195 @@ DijkstraReturn dijkstra(const vector<vector<int>>& graph, int startNode) {
 }
 
 // Function to test graphs of increasing size and record results into a CSV file
+// void testIncreasingGraphSizes() {
+//     ofstream file("graph_size_results.csv");
+//     file << "Number of Nodes,Key Comparisons,CPU Time (us)\n";
+
+//     for (int num_nodes = 500; num_nodes <= 10000; num_nodes += 100) {
+//         vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0));
+
+//         // Generate a random connected graph with a spanning tree
+//         for (int i = 0; i < num_nodes - 1; ++i) {
+//             int weight = rand() % 20 + 1;  // Random weight between 1 and 20
+//             graph[i][i + 1] = weight;
+//             // graph[i + 1][i] = weight;      // Undirected graph
+//         }
+
+//         int startNode = rand() % num_nodes;
+//         auto start = chrono::high_resolution_clock::now();
+//         DijkstraReturn result = dijkstra(graph, startNode);
+//         auto end = chrono::high_resolution_clock::now();
+//         auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+
+//         lock_guard<mutex> lock(fileMutex); // Lock the mutex for thread-safe file writing
+//         file << num_nodes << "," << result.key_comps << "," << duration << "\n";
+//     }
+
+//     file.close();
+//     cout << "Graph size test results saved to graph_size_results.csv\n";
+// }
+// Function to test graphs of increasing size and record results into a CSV file (adjacency matrix implementation)
 void testIncreasingGraphSizes() {
-    ofstream file("graph_size_results.csv");
-    file << "Number of Nodes,Key Comparisons,CPU Time (us)\n";
+    ofstream file;
+    file.open("graph_size_results.csv", std::ios::app);
+    file << "Number of Nodes,Average Key Comparisons,Average CPU Time (us)\n";
+    file.close();
+
+    const int iterations = 5;  // Number of iterations to average out anomalies
 
     for (int num_nodes = 500; num_nodes <= 10000; num_nodes += 100) {
-        vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0));
+        uint64_t total_key_comps = 0;
+        uint64_t total_duration = 0;
 
-        // Generate a random connected graph with a spanning tree
-        for (int i = 0; i < num_nodes - 1; ++i) {
-            int weight = rand() % 20 + 1;  // Random weight between 1 and 20
-            graph[i][i + 1] = weight;
-            // graph[i + 1][i] = weight;      // Undirected graph
-        }
+        for (int iter = 0; iter < iterations; ++iter) {
+            vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0)); // Adjacency matrix representation
 
-        int startNode = rand() % num_nodes;
-        auto start = chrono::high_resolution_clock::now();
-        DijkstraReturn result = dijkstra(graph, startNode);
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-
-        lock_guard<mutex> lock(fileMutex); // Lock the mutex for thread-safe file writing
-        file << num_nodes << "," << result.key_comps << "," << duration << "\n";
-    }
-
-    file.close();
-    cout << "Graph size test results saved to graph_size_results.csv\n";
-}
-
-// Function to test graphs of specific sizes with increasing density and record results into a CSV file
-void testGraphsWithSpecificSizesAndDensity() {
-    ofstream file("graph_density_results.csv");
-    file << "Number of Nodes,Density (%),Key Comparisons,CPU Time (us)\n";
-    vector<int> specific_sizes = {500, 1000, 10000};
-
-    for (int num_nodes : specific_sizes) {
-        int max_possible_edges = num_nodes * (num_nodes - 1) / 2;  // Maximum number of edges for full connectivity
-
-        for (int interval = 1; interval <= 20; ++interval) {
-            int current_edge_count = (interval * max_possible_edges) / 20;
-            vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0));
-
-            // Ensure the graph is connected by creating a spanning tree
+            // Generate a random connected graph with a spanning tree
             for (int i = 0; i < num_nodes - 1; ++i) {
-                int weight = rand() % 20 + 1;  // Random weight between 1 and 20
-                graph[i][i + 1] = weight;
-                // graph[i + 1][i] = weight;      // Undirected graph
+                int weight = 10;  // Fixed weight to reduce randomness
+                graph[i][i + 1] = weight; // Directed edge
             }
 
-            // Add additional random edges to achieve the desired edge count
-            int added_edges = num_nodes - 1; // Already added by the spanning tree
-            while (added_edges < current_edge_count) {
-                int node1 = rand() % num_nodes;
-                int node2 = rand() % num_nodes;
-                while (node1 == node2 || graph[node1][node2] != 0) {
-                    node1 = rand() % num_nodes;
-                    node2 = rand() % num_nodes;
-                }
-                int weight = rand() % 20 + 1;
-                graph[node1][node2] = weight;
-                // graph[node2][node1] = weight;  // Undirected graph
-                added_edges++;
-            }
+            int startNode = 0;  // Fixed start node to ensure consistency
 
-            int startNode = rand() % num_nodes;
             auto start = chrono::high_resolution_clock::now();
             DijkstraReturn result = dijkstra(graph, startNode);
             auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end - start).count();
 
+            total_key_comps += result.key_comps;
+            total_duration += duration;
+        }
+
+        // Calculate the average key comparisons and CPU time
+        uint64_t average_key_comps = total_key_comps / iterations;
+        uint64_t average_duration = total_duration / iterations;
+
+        // Log the results to the file
+        lock_guard<mutex> lock(fileMutex); // Lock the mutex for thread-safe file writing
+        file.open("graph_size_results.csv", std::ios::app);
+        file << num_nodes << "," << average_key_comps << "," << average_duration << "\n";
+        file.close();
+    }
+
+    cout << "Graph size test results saved to graph_size_results.csv\n";
+}
+
+
+// Function to test graphs of specific sizes with increasing density and record results into a CSV file
+// void testGraphsWithSpecificSizesAndDensity() {
+//     ofstream file("graph_density_results.csv");
+//     file << "Number of Nodes,Density (%),Key Comparisons,CPU Time (us)\n";
+//     vector<int> specific_sizes = {500, 1000, 10000};
+
+//     for (int num_nodes : specific_sizes) {
+//         int max_possible_edges = num_nodes * (num_nodes - 1);  // Maximum number of edges for full connectivity
+
+//         for (int interval = 1; interval <= 20; ++interval) {
+//             int current_edge_count = (interval * max_possible_edges) / 20;
+//             vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0));
+
+//             // Ensure the graph is connected by creating a spanning tree
+//             for (int i = 0; i < num_nodes - 1; ++i) {
+//                 int weight = rand() % 20 + 1;  // Random weight between 1 and 20
+//                 graph[i][i + 1] = weight;
+//                 // graph[i + 1][i] = weight;      // Undirected graph
+//             }
+
+//             // Add additional random edges to achieve the desired edge count
+//             int added_edges = num_nodes - 1; // Already added by the spanning tree
+//             while (added_edges < current_edge_count) {
+//                 int node1 = rand() % num_nodes;
+//                 int node2 = rand() % num_nodes;
+//                 while (node1 == node2 || graph[node1][node2] != 0) {
+//                     node1 = rand() % num_nodes;
+//                     node2 = rand() % num_nodes;
+//                 }
+//                 int weight = rand() % 20 + 1;
+//                 graph[node1][node2] = weight;
+//                 // graph[node2][node1] = weight;  // Undirected graph
+//                 added_edges++;
+//             }
+
+//             int startNode = rand() % num_nodes;
+//             auto start = chrono::high_resolution_clock::now();
+//             DijkstraReturn result = dijkstra(graph, startNode);
+//             auto end = chrono::high_resolution_clock::now();
+//             auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+
+//             lock_guard<mutex> lock(fileMutex); // Lock the mutex for thread-safe file writing
+//             file << num_nodes << "," << (interval * 10) << "," << result.key_comps << "," << duration << "\n";
+//         }
+//     }
+
+//     file.close();
+//     cout << "Graph density test results saved to graph_density_results.csv\n";
+// }
+// Function to test graphs of specific sizes with increasing density and record results into a CSV file (adjacency matrix implementation)
+void testGraphsWithSpecificSizesAndDensity() {
+    ofstream file;
+    file.open("graph_density_results.csv", std::ios::app);
+    file << "Number of Nodes,Density (%),Average Key Comparisons,Average CPU Time (us)\n";
+    file.close();
+
+    vector<int> specific_sizes = {500, 1000, 10000};
+    const int iterations = 5;  // Number of iterations to average out anomalies
+
+    for (int num_nodes : specific_sizes) {
+        int max_possible_edges = num_nodes * (num_nodes - 1);  // Maximum number of edges for full connectivity
+
+        for (int interval = 1; interval <= 20; ++interval) {
+            uint64_t total_key_comps = 0;
+            uint64_t total_duration = 0;
+
+            for (int iter = 0; iter < iterations; ++iter) {
+                int current_edge_count = (interval * max_possible_edges) / 20;
+                vector<vector<int>> graph(num_nodes, vector<int>(num_nodes, 0)); // Adjacency matrix
+
+                // Ensure the graph is connected by creating a spanning tree
+                for (int i = 0; i < num_nodes - 1; ++i) {
+                    int weight = 10;  // Fixed weight to reduce randomness
+                    graph[i][i + 1] = weight; // Directed edge
+                }
+
+                // Add additional random edges to achieve the desired edge count
+                int added_edges = num_nodes - 1; // Already added by the spanning tree
+                while (added_edges < current_edge_count) {
+                    int node1 = rand() % num_nodes;
+                    int node2 = rand() % num_nodes;
+                    while (node1 == node2 || graph[node1][node2] != 0) {
+                        node1 = rand() % num_nodes;
+                        node2 = rand() % num_nodes;
+                    }
+                    graph[node1][node2] = 10;  // Fixed weight for consistency
+                    added_edges++;
+                }
+
+                int startNode = 0;  // Fixed start node for consistency
+                auto start = chrono::high_resolution_clock::now();
+                DijkstraReturn result = dijkstra(graph, startNode);
+                auto end = chrono::high_resolution_clock::now();
+                auto duration = chrono::duration_cast<chrono::microseconds>(end - start).count();
+
+                total_key_comps += result.key_comps;
+                total_duration += duration;
+            }
+
+            // Calculate the average key comparisons and CPU time
+            uint64_t average_key_comps = total_key_comps / iterations;
+            uint64_t average_duration = total_duration / iterations;
+
+            // Log the results to the file
             lock_guard<mutex> lock(fileMutex); // Lock the mutex for thread-safe file writing
-            file << num_nodes << "," << (interval * 10) << "," << result.key_comps << "," << duration << "\n";
+            file.open("graph_density_results.csv", std::ios::app);
+            file << num_nodes << "," << (interval * 5) << "," << average_key_comps << "," << average_duration << "\n";
+            file.close();
         }
     }
 
-    file.close();
     cout << "Graph density test results saved to graph_density_results.csv\n";
 }
+
 
 int main() {
     srand(static_cast<unsigned int>(time(0)));  // Initialize random seed
