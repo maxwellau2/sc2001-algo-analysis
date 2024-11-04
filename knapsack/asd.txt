@@ -1,0 +1,50 @@
+3 and 14 are not in memo
+3 and 6 are not in memo
+2 and 6 are not in memo
+2 and 0 are not in memo
+1 and 6 are not in memo
+1 and 2 are not in memo
+0 and 2 are not in memo
+0 and 6 are not in memo
+2 and 14 are not in memo
+2 and 8 are not in memo
+2 and 2 are not in memo
+1 and 2 are in memo
+1 and 8 are not in memo
+1 and 4 are not in memo
+1 and 0 are not in memo
+0 and 4 are not in memo
+0 and 8 are not in memo
+1 and 14 are not in memo
+1 and 10 are not in memo
+1 and 6 are in memo
+0 and 10 are not in memo
+0 and 14 are not in memo
+
+
+3 and 14 are not in memo
+3 and 6 are not in memo
+2 and 6 are not in memo
+2 and 0 are not in memo
+1 and 6 are not in memo
+1 and 2 are not in memo
+0 and 2 are not in memo
+0 and 6 are not in memo
+2 and 14 are not in memo
+2 and 8 are not in memo
+2 and 2 are not in memo
+1 and 2 are not in memo
+0 and 2 are not in memo
+1 and 8 are not in memo
+1 and 4 are not in memo
+1 and 0 are not in memo
+0 and 4 are not in memo
+0 and 8 are not in memo
+1 and 14 are not in memo
+1 and 10 are not in memo
+1 and 6 are not in memo
+1 and 2 are not in memo
+0 and 2 are not in memo
+0 and 6 are not in memo
+0 and 10 are not in memo
+0 and 14 are not in memo

@@ -2,29 +2,29 @@ weights = [4, 6, 8]
 profits = [7, 6, 9]
 n = len(weights)
 
-def knapsack_top_down(capacity_idx, item_idx, memo):
+def knapsack_top_down(capacity, item_idx, memo):
     # If the result is already in memo, return it
-    if memo[item_idx][capacity_idx] != -1:
-        # print(f"{item_idx} and {capacity_idx} are in memo")
-        return memo[item_idx][capacity_idx]
+    if memo[item_idx][capacity] != -1:
+        # print(f"{item_idx} and {capacity} are in memo")
+        return memo[item_idx][capacity]
 
-    # print(f"{item_idx} and {capacity_idx} are not in memo")
+    # print(f"{item_idx} and {capacity} are not in memo")
 
     # Base case: No remaining capacity or no items left
-    if capacity_idx == 0 or item_idx == 0:
-        memo[item_idx][capacity_idx] = 0
+    if capacity == 0 or item_idx == 0:
+        memo[item_idx][capacity] = 0
         return 0
 
     # Case 1: Item does not fit
-    if capacity_idx < weights[item_idx - 1]:  
-        memo[item_idx][capacity_idx] = knapsack_top_down(capacity_idx, item_idx - 1, memo)
+    if capacity < weights[item_idx - 1]:  
+        memo[item_idx][capacity] = knapsack_top_down(capacity, item_idx - 1, memo)
     else:
         # Case 2: Item fits, choose max of including or excluding it
-        take = profits[item_idx - 1] + knapsack_top_down(capacity_idx - weights[item_idx - 1], item_idx, memo)
-        exclude = knapsack_top_down(capacity_idx, item_idx - 1, memo)
-        memo[item_idx][capacity_idx] = max(take, exclude)
+        take = profits[item_idx - 1] + knapsack_top_down(capacity - weights[item_idx - 1], item_idx, memo)
+        exclude = knapsack_top_down(capacity, item_idx - 1, memo)
+        memo[item_idx][capacity] = max(take, exclude)
 
-    return memo[item_idx][capacity_idx]
+    return memo[item_idx][capacity]
 
 def top_down_driver(C):  # where C is the capacity of the knapsack
     # Initialize memo table with -1
