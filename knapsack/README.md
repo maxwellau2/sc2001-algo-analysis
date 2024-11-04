@@ -70,5 +70,30 @@ def P(C):  # where C is the capacity of the knapsack
     # Initialize memo table with -1
     memo = [[-1 for _ in range(C + 1)] for _ in range(n + 1)]
     return P_recursive(C, n, memo)
+```
 
+Bottom up using tabulation
+
+```python
+global:
+    weights = [w1, w2, ..., wn]  # weights of items
+    profits = [p1, p2, ..., pn]  # profits of items
+def knapsack_bottom_up(C, item_idx):
+    table = [[0 for _ in range(C + 1)] for _ in range(n + 1)]
+    # Build the table in a bottom-up manner
+    for item_idx in range(1, n + 1):
+        for capacity_idx in range(C + 1):
+            # Case 1: Exclude the current item
+            table[item_idx][capacity_idx] = table[item_idx - 1][capacity_idx]
+
+            # Case 2: Include the current item (if it fits)
+            if capacity_idx >= weights[item_idx - 1]:
+                table[item_idx][capacity_idx] = max(
+                    table[item_idx][capacity_idx],
+                    profits[item_idx - 1] + table[item_idx][capacity_idx - weights[item_idx - 1]]
+                )
+    return table[n][C]
+
+def bottom_up_driver(C):
+    return knapsack_bottom_up(C, n)
 ```
