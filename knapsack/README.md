@@ -23,5 +23,52 @@ function P_recursive(C, i):
 
 function P(C): // where C is the capacity of the knapsack
     return P_recursive(C, 0)
+```
+
+2. Draw the subproblem graph for P(14) where n is 3 with the weights and profits given below
+
+```
+global:
+    weights = [4, 6, 8]
+    profits = [7, 6, 9]
+jiawei pls help
+```
+
+3. Give a dynamic programming algorithm to compute the maximum profit, given a knapsack of capacity C, n types of objects with weights wi and profits pi using the bottom up approach.
+
+Top Down using Memoization
+
+```python
+  # Global variables
+weights = [w1, w2, ..., wn]  # weights of items
+profits = [p1, p2, ..., pn]  # profits of items
+n = len(weights)
+
+def P_recursive(capacity_idx, item_idx, memo):
+    # If the result is already in memo, return it
+    if memo[item_idx][capacity_idx] != -1:
+        return memo[item_idx][capacity_idx]
+
+    # Base case: No remaining capacity or no items left
+    if capacity_idx == 0 or item_idx == 0:
+        memo[item_idx][capacity_idx] = 0
+        return 0
+
+    # Case 1: Item does not fit
+    if capacity_idx < weights[item_idx - 1]:
+        memo[item_idx][capacity_idx] = P_recursive(capacity_idx, item_idx - 1, memo)
+    else:
+        # Case 2: Item fits, choose max of including or excluding it
+        memo[item_idx][capacity_idx] = max(
+            profits[item_idx - 1] + P_recursive(capacity_idx - weights[item_idx - 1], item_idx, memo),
+            P_recursive(capacity_idx, item_idx - 1, memo)
+        )
+
+    return memo[item_idx][capacity_idx]
+
+def P(C):  # where C is the capacity of the knapsack
+    # Initialize memo table with -1
+    memo = [[-1 for _ in range(C + 1)] for _ in range(n + 1)]
+    return P_recursive(C, n, memo)
 
 ```
