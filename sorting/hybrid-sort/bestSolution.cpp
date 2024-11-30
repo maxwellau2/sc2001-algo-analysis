@@ -70,11 +70,11 @@ void timeHybridSort() {
     }
 
     cout << "starting HybridSort timing\n";
-    for (int i = maxSize-step; i < maxSize; i += step) {
+    for (int i = 0; i < 20; i ++) {
         cout << "HybridSort timing for " << i << "\n";
         vector<int> test;
-        for (int j = i; j > 0; j--) { 
-            int randomNum = rand() % i;
+        for (int j = 0; j < maxSize; j++) { 
+            int randomNum = rand() % maxSize;
             test.push_back(randomNum);
         }
 
@@ -164,11 +164,11 @@ void timeMergeSort() {
     }
 
     cout << "starting MergeSort timing\n";
-    for (int i = maxSize; i < maxSize; i += step) {
+    for (int i = 0; i < 20; i ++){
         cout << "MergeSort timing for " << i << "\n";
         vector<int> test;
-        for (int j = i; j > 0; j--) {
-            int randomNum = rand() % i;
+        for (int j = 0; j < maxSize; j++) {
+            int randomNum = rand() % maxSize;
             test.push_back(randomNum);
         }
 
